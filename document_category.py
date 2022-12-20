@@ -201,6 +201,7 @@ acc_callback = myCallback()
 #save model
 
 filepath = 'Model.h5'
+checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor='val_accuracy', verbose=2, save_best_only=True,
+                                             save_weights_only=False, mode='max')
 
-    
-
+callback_list = [acc_callback,checkpoint]
