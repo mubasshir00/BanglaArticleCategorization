@@ -149,5 +149,65 @@ data_matrix = pd.DataFrame({'Total Docuements' : documents, 'Total Words' : word
 
 # label encoding and dataset splitting
 
+def label_encoding(dataset,bool):
+  le = LabelEncoder()
+  le.fit(dataset.Category)
+  encoded_labels = le.transform(dataset.Category)
+  labels = np.array(encoded_labels)
+  class_names = le.classes_
+  if bool == True:
+    print(le.classes_)
+  return labels
+
+def dataset_split(news,category):
+  X,X_test,y,y_test = train_test_split(news,category,train_size = 0.9,test_size = 0.1, random_state=0)
+
+  X_train,X_valid,y_train,y_valid = train_test_split(X,y,train_size = 0.8,test_size = 0.2,random_state=0)
+
+  return X_train,X_valid,X_test,y_train,y_valid,y_test
 
 
+#Tokenizer
+
+def encoded_texts(dataset,padding_length,max_words):
+  tokenizer = Tokenizer(num_words = max_words,filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n-',split=' ',char_level= False,oov_token='<oov>',document_count=0)
+
+  tokenizer.fit_on_texts(dataset.cleaned)
+
+  (word_counts,word_docs,word_index,document_count) = (tokenizer.word_counts,tokenizer.word_docs,tokenizer.word_index,tokenizer.document_count)
+
+  def tokenizer_info(mylist,bool):
+    ordered = sorted(mylist.items(),key= lambda item: item[1],reverse=bool)
+    for w,c in ordered[:10]:
+      print(w,"\t",c)
+  tokenizer_info(word_counts, bool = True)
+  tokenizer_info(word_docs, bool = True)
+  tokenizer_info(word_index, bool = True)
+
+  # convert string into list of integer indices
+
+  sequences = tokenizer.texts_to_sequences(dataset.cleaned)
+  word_index = tokenizer.word_index
+
+  # print(dataset.cleaned[0],"\n",sequences[0])
+
+  #pad sequences
+  corpus = keras.preprocessing.sequence.pad_sequences(sequences,value=0.0,padding='post',maxlen= padding_length)
+  # print(dataset.cleaned[0])
+  # print(corpus[0])
+
+  # label encoding
+  labels = label_encoding(dataset, True)
+
+  # save the tokenizer into a pickle file
+  with open('tokenizer.pickle','wb') as handle:
+    pickle.dump(tokenizer, handle,protocol=pickle.HIGHEST_PROTOCOL)
+  return corpus,labels
+
+num_words = 5000
+corpus,labels = encoded_texts(dataset, 300, num_words)
+
+print(corpus.shape)
+
+
+dataset_split(corpus, labels)
